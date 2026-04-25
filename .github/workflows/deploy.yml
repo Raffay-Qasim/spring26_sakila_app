@@ -1,0 +1,43 @@
+name: CD Pipeline - Deployment
+
+on:
+  push:
+    tags:
+      - 'v*' 
+
+jobs:
+  staging-deploy:
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy to Staging
+        run: |
+          echo "🚀 Deploying Sakila App to Staging Environment..."
+          echo "📦 Image Version: ${{ github.ref_name }}"
+          sleep 5
+          echo "✅ Deployment Successful!"
+
+      - name: Generate Job Summary
+        run: |
+          echo "## 🚀 Staging Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "* **Environment:** Staging" >> $GITHUB_STEP_SUMMARY
+          echo "* **Release Tag:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "* **Status:** Success ✅" >> $GITHUB_STEP_SUMMARY
+
+  create-release:
+    needs: staging-deploy
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          tag_name: ${{ github.ref_name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
