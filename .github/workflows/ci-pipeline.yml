@@ -38,17 +38,18 @@ jobs:
       - name: Download and Import Sakila DB
         run: |
           curl -L https://downloads.mysql.com/docs/sakila-db.tar.gz | tar xz
-          # Give MySQL 30 seconds (being safe)
+          # Sleep to ensure MySQL internal init is finished
           sleep 30
-          # We MUST use --protocol=tcp to avoid the 'socket' error in GitHub Actions
+          # Force TCP and use 127.0.0.1 to avoid socket errors
           mysql --protocol=tcp -h 127.0.0.1 -u root -padmin sakila < sakila-db/sakila-schema.sql
           mysql --protocol=tcp -h 127.0.0.1 -u root -padmin sakila < sakila-db/sakila-data.sql
       - name: Run Tests
         env:
-          MYSQL_HOST: localhost
+          MYSQL_HOST: 127.0.0.1
           MYSQL_USER: root
           MYSQL_PASSWORD: admin
           MYSQL_DB: sakila
+          PYTHONPATH: .  # Fixes the ModuleNotFoundError for 'app'
         run: |
           pip install -r requirements.txt pytest
           pytest
