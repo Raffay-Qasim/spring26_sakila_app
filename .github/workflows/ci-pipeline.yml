@@ -54,21 +54,18 @@ jobs:
           pip install -r requirements.txt pytest
           pytest
 
-  build:
+  build-and-scan:
     needs: [lint, test]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      
       - name: Build Docker Image
         run: docker build -t sakila-app:latest .
+        
       - name: Smoke Test Image
         run: docker run --rm sakila-app:latest python -c "print('App Image Boots Successfully')"
 
-  security-scan:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
@@ -77,6 +74,7 @@ jobs:
           output: 'trivy-report.txt'
           exit-code: 0
           severity: 'CRITICAL,HIGH'
+          
       - name: Upload Trivy Report
         uses: actions/upload-artifact@v4
         with:
