@@ -38,8 +38,10 @@ jobs:
       - name: Download and Import Sakila DB
         run: |
           curl -L https://downloads.mysql.com/docs/sakila-db.tar.gz | tar xz
-          mysql -h localhost -u root -padmin sakila < sakila-db/sakila-schema.sql
-          mysql -h localhost -u root -padmin sakila < sakila-db/sakila-data.sql
+          # Give MySQL extra time to wake up in the cloud runner
+          sleep 20
+          mysql -h localhost -P 3306 -u root -padmin sakila < sakila-db/sakila-schema.sql
+          mysql -h localhost -P 3306 -u root -padmin sakila < sakila-db/sakila-data.sql
       - name: Run Tests
         env:
           MYSQL_HOST: localhost
@@ -70,5 +72,11 @@ jobs:
         with:
           image-ref: 'sakila-app:latest'
           format: 'table'
+          output: 'trivy-report.txt'
           exit-code: 0
           severity: 'CRITICAL,HIGH'
+      - name: Upload Trivy Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: trivy-report
+          path: trivy-report.txt
