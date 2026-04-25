@@ -10,9 +10,9 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.9'
       - name: Install Linting Tools
@@ -32,7 +32,7 @@ jobs:
           - 3306:3306
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install MySQL Client
         run: sudo apt-get install -y mysql-client
       - name: Download and Import Sakila DB
@@ -49,7 +49,7 @@ jobs:
           MYSQL_USER: root
           MYSQL_PASSWORD: admin
           MYSQL_DB: sakila
-          PYTHONPATH: .  # Fixes the ModuleNotFoundError for 'app'
+          PYTHONPATH: .
         run: |
           pip install -r requirements.txt pytest
           pytest
@@ -58,7 +58,7 @@ jobs:
     needs: [lint, test]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Build Docker Image
         run: docker build -t sakila-app:latest .
       - name: Smoke Test Image
@@ -68,7 +68,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
@@ -78,7 +78,7 @@ jobs:
           exit-code: 0
           severity: 'CRITICAL,HIGH'
       - name: Upload Trivy Report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: trivy-report
           path: trivy-report.txt
