@@ -38,10 +38,11 @@ jobs:
       - name: Download and Import Sakila DB
         run: |
           curl -L https://downloads.mysql.com/docs/sakila-db.tar.gz | tar xz
-          # Give MySQL extra time to wake up in the cloud runner
-          sleep 20
-          mysql -h localhost -P 3306 -u root -padmin sakila < sakila-db/sakila-schema.sql
-          mysql -h localhost -P 3306 -u root -padmin sakila < sakila-db/sakila-data.sql
+          # Give MySQL 30 seconds (being safe)
+          sleep 30
+          # We MUST use --protocol=tcp to avoid the 'socket' error in GitHub Actions
+          mysql --protocol=tcp -h 127.0.0.1 -u root -padmin sakila < sakila-db/sakila-schema.sql
+          mysql --protocol=tcp -h 127.0.0.1 -u root -padmin sakila < sakila-db/sakila-data.sql
       - name: Run Tests
         env:
           MYSQL_HOST: localhost
