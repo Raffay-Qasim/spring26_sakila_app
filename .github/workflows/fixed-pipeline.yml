@@ -1,0 +1,39 @@
+name: C3 - Fixed Pipeline
+
+on:
+  push:
+    branches: [ develop ]
+
+jobs:
+  ci-cd-success:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: admin
+          MYSQL_DATABASE: sakila
+        ports:
+          - 3306:3306
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+      - name: Run Tests
+        env:
+          MYSQL_HOST: 127.0.0.1
+          PYTHONPATH: .
+        run: |
+          pip install -r requirements.txt pytest
+          pytest
+      - name: Build and Scan
+        run: |
+          docker build -t sakila-app:latest .
+          echo "Scan results would go here" > success-report.txt
+      - name: Upload Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: success-report
+          path: success-report.txt

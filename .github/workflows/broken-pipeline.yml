@@ -1,0 +1,47 @@
+name: C3 - Broken Pipeline
+
+on:
+  push:
+    branches: [ develop ]
+
+jobs:
+  test-job:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: admin
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Tests
+        env:
+          MYSQL_HOST: localhost  # Error 1: Localhost vs 127.0.0.1
+        run: |
+          pip install pytest
+          pytest tests/test_api.py  # Error 2: Missing PYTHONPATH
+          
+  build-job:
+    needs: test-job
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build Image
+        run: docker build -t sakila-app . # Error 3: Missing checkout step
+        
+  scan-job:
+    needs: build-job
+    runs-on: ubuntu-latest
+    steps:
+      - name: Scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'sakila-app:latest' # Error 4: Image not found (Job Isolation)
+          
+  artifact-job:
+    needs: scan-job
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/upload-artifact@v3 # Error 5: Deprecated v3 version
+        with:
+          name: report
+          path: missing-file.txt # Error 6: Path does not exist
